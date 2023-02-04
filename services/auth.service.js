@@ -4,6 +4,10 @@ const createError = require('http-errors');
 const bcrypt = require('bcrypt');
 const { recoveryJWT, verifyRecoveryJWT } = require('../utils/jwt')
 
+const onlyAlphabetRegex = /^[A-Za-z]+$/;
+const emailRegex = /^[a-z0-9]+(?:[.-][a-z0-9]+)*@(?!\.|\-)[a-z]+(?:\.[a-z]+)*$/;
+const phoneRegex = /^\+[0-9]+$/;
+
 /**
  * 
  * This Function with register user in the data basr
@@ -11,11 +15,33 @@ const { recoveryJWT, verifyRecoveryJWT } = require('../utils/jwt')
  */
 const register = async (data) =>{
   
-    console.log(data);
+  
 
     if (!(data && data.password && data.email &&  data.firstName  &&  data.lastName))
-      throw createError(400, `Missing Information!`)
-     
+    throw createError(400, `Missing Information!`)
+
+	// Verfiy FirstName
+	if (data.firstName.length > 20 || !data.firstName.match(onlyAlphabetRegex))
+		throw createError(400, 'Bad format firstName');
+
+	// Verfiy LastName
+	if (data.lastName.length > 20 || !data.lastName.match(onlyAlphabetRegex))
+		throw createError(400, 'Bad format lastName');
+
+	//Verify email
+	if (!data.email.match(emailRegex))
+		throw createError(400, 'Bad format email');
+
+	//Verify password
+	if (data.password.length > 20 || data.password.length < 6)
+		throw createError(400, 'Bad format password');
+
+	//Verify PHONE
+	console.log(data.numTel.toString().match(phoneRegex), data.numTel);
+	if (data.numTel.length > 15 || data.numTel.length < 8)
+		throw createError(400, 'Bad format phone');
+
+
     const similarUsers = await User.findOne({"email": data.email.toLowerCase()})  
     
     if (similarUsers) 
@@ -45,6 +71,14 @@ const register = async (data) =>{
 const login = async (body) => {
     if (!body.email || !body.password)
       throw createError(400, `body is missing abs!`)
+
+    //Verify email
+    if (!body.email.match(emailRegex))
+        throw createError(400, 'Bad format email');
+    //Verify password
+	if (body.password.length > 20 || body.password.length < 6)
+		throw createError(400, 'Bad format password');
+
     let user = await User.findOne({"email": body.email.toLowerCase()})
     if (!user)
     throw createError(404, `User does not exist !`)
@@ -53,7 +87,6 @@ const login = async (body) => {
     else
     return user
 }
-
 
 const forgetAccount = async (email) => {
     if (!email)
@@ -65,10 +98,8 @@ const forgetAccount = async (email) => {
     await user.update({ recovery_token: token })
   
     return token;
-    // TODO: const baseURL = process.env.CLIENT_URL (the client is the platform domain)
-    // TODO: Send mail with baseURL/account-recovery?token=$token
-    // sendResetPasswordMail(email, token)
 }
+
 const resetAccount = async (password, token) => {
     if (!password || !token)
       throw createError(400, `Mot de passe ou recovery token est manquant`)
@@ -78,7 +109,8 @@ const resetAccount = async (password, token) => {
       throw createError(401, 'Token est invalide')
     const hash = bcrypt.hashSync(password, 10)
     await user.update({ password: hash, recovery_token: null })
-  }
+}
+
 module.exports = {
     register,
     login,

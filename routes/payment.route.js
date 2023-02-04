@@ -1,4 +1,3 @@
-
 var express = require('express');
 const router = express.Router();
 
@@ -9,6 +8,5 @@ router.post("/create-portal-session", paymentController.portalSession);
 router.post("/cancel-subscription", paymentController.deleteSubscription);
 router.post("/update-lookup", paymentController.updatePrices);
 router.post("/webhook",paymentController.webhook);
-
 
 module.exports = router;    
