@@ -10,8 +10,9 @@ const Users = new mongoose.Schema({
     language: { type: String},
     picture: { type: String,default:"user.png"},
     recovery_token:{ type: String},
-    plan:{ type: String},
-    subscribe_id:{ type: String}
+    plan:{ type: String,default:"free"},
+    subscribe_id:{ type: String},
+    nbr_words:{ type: Number,default:0}
 
 },{
     timestamps:true

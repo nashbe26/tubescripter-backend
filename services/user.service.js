@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const createError = require('http-errors');
 const bcrypt = require('bcrypt');
+const user = require('../models/user');
 
 
 /**
@@ -13,7 +14,7 @@ const updateUser =  async (id,data) =>{
     if(data.password)
         throw createError(401,"You can't modify user password");
 
-    let oneUser = await User.findOneAndUpdate({_id:id},data,{
+    let oneUser = await data.updateOne({_id:id},data,{
         returnOriginal: false,
         
     });
@@ -31,6 +32,31 @@ const updateUser =  async (id,data) =>{
 
     return updated;
 }
+
+/**
+ *
+ * This Function will update all user information
+ * 
+ */
+
+const updateNbrWords =  async (data) =>{
+
+    console.log(data);
+
+    if(!data.userId)
+        throw createError(401,"User id is not defiend");
+
+    const updated = await User.findOneAndUpdate({_id:data.userId},{
+        $inc : {nbr_words:data.nbr_words}}
+    )
+
+    if(!updated)
+        throw createError(401,"Failed to update the website");
+
+    return updated;
+
+}
+
 /**
  *
  * This Function will update all user information
@@ -114,7 +140,7 @@ const updatePasswordUser = async (id,data)=>{
 
 
 module.exports = {
-    
+    updateNbrWords,
     addUserPorfile,
     updateUser,
     getUserById,

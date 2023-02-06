@@ -48,4 +48,6 @@ router.post('/youtubehooks', writesonicController.callYoutubeHooksApi);
 } */
 router.post('/youtubedescriptions', writesonicController.callYoutubeDescriptionsApi);
 
+router.post('/tiktokscriptdescription', writesonicController.callTikTokScripterApi);
+
 module.exports = router
