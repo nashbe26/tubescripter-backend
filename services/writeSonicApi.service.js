@@ -1,234 +1,230 @@
-const axios = require('axios');
-const createError = require('http-errors');
-const { getUserById, updateNbrWords } = require('./user.service');
+const axios = require("axios");
+const createError = require("http-errors");
+const { getUserById, updateNbrWords } = require("./user.service");
 
-const sdk = require('api')('@writesonic/v2.2#43xnsflcadmm1b');
+const sdk = require("api")("@writesonic/v2.2#43xnsflcadmm1b");
 
-async function checkIfNrWord(userId){
+async function checkIfNrWord(userId) {
+  const user = await getUserById(userId);
 
-    const user = await getUserById(userId);
+  if (user.plan == "free" && user.nbr_words > 25000)
+    throw createError(401, "You have reached you limit as free user!");
 
-    if(user.plan =="free" && user.nbr_words > 25000)
-        throw createError(401,'You have reached you limit as free user!');
+  if (user.plan == "starter" && user.nbr_words > 8000)
+    throw createError(401, "You have reached you limit as starter user!");
 
-    if(user.plan =="starter" && user.nbr_words > 8000)
-        throw createError(401,'You have reached you limit as starter user!');
+  if (user.plan == "premuim" && user.nbr_words > 20000)
+    throw createError(401, "You have reached you limit as premium user!");
 
-    if(user.plan =="premuim" && user.nbr_words > 20000)
-        throw createError(401,'You have reached you limit as premium user!');
+  if (user.plan == "custom" && user.nbr_words > 100000)
+    throw createError(401, "You have reached you limit as custom user!");
 
-    if(user.plan =="custom" && user.nbr_words > 100000)
-        throw createError(401,'You have reached you limit as custom user!');
+  let engine = "";
 
-    
-    let engine =""
+  switch (user.plan) {
+    case "free":
+      engine = "economy";
+      break;
+    case "starter":
+      engine = "good";
+      break;
+    case "premuim":
+      engine = "premuim";
+      break;
+    case "custom":
+      engine = "custom";
+      break;
+    default:
+      break;
+  }
 
-    switch(user.plan){
-        case "free":
-            engine="economy";
-            break;
-        case "starter":
-            engine="good";
-            break;
-        case "premuim":
-            engine="premuim";
-            break;
-        case "custom":
-            engine="custom";
-            break;
-        default:
-            break;
-    }
-
-    return engine;
+  return engine;
 }
 
-exports.callYoutubeTitleApi =async  function(userId,data) {
-    
-    sdk.auth(process.env.WRITESONIC_API_KEY);
-    
-    let engine = await checkIfNrWord(userId)
+exports.callYoutubeTitleApi = async function (userId, data) {
+  sdk.auth(process.env.WRITESONIC_API_KEY);
 
-    if(!engine)
-        throw createError(401,'engine Failed');
+  let engine = await checkIfNrWord(userId);
 
-    if(!data){
-        throw createError(401,'Failed to generate the text');
-    }
-    try{
+  if (!engine) throw createError(401, "engine Failed");
 
-        const resp = await sdk.youtubeTitles_V2BusinessContentYoutubeTitles_post({
-            video_description: data.video_description,
-            search_term: data.search_term,
-            tone_of_voice: data.tone_of_voice
-          },{
-            language:data.language,
-            num_copies: data.num_copies,
-            engine
-          })
-          if(resp.data[0].text.length > 0)
-        await updateNbrWords({userId,nbr_words:resp.data[0].text.length})
-        return resp;
-    }catch(err){
-        throw createError(401,err);
-    }
-    
-}
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
+  try {
+    const resp = await sdk.youtubeTitles_V2BusinessContentYoutubeTitles_post(
+      {
+        video_description: data.video_description,
+        search_term: data.search_term,
+        tone_of_voice: data.tone_of_voice,
+      },
+      {
+        language: data.language,
+        num_copies: data.num_copies,
+        engine,
+      }
+    );
+    if (resp.data[0].text.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+};
 
-exports.callParagraphWriterApi =async  function(userId,data) {
+exports.callParagraphWriterApi = async function (userId, data) {
+  sdk.auth(process.env.WRITESONIC_API_KEY);
 
-    sdk.auth(process.env.WRITESONIC_API_KEY);
-    
-    let engine = await checkIfNrWord(userId)
+  let engine = await checkIfNrWord(userId);
 
-    if(!engine)
-        throw createError(401,'engine Failed');
-    
-    if(!data){
-        throw createError(401,'Failed to generate the text');
-    }
+  if (!engine) throw createError(401, "engine Failed");
 
-    try{
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
 
-        const resp = await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post({
-            paragraph_title: data.video_title,
-            tone_of_voice: data.tone_of_voice
-          },{
-            language:data.language,
-            num_copies: data.num_copies
-          })
-          if(resp.data[0].text.length > 0)
-          await updateNbrWords({userId,nbr_words:resp.data[0].text.length})
+  try {
+    const resp =
+      await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
+        {
+          paragraph_title: data.video_title,
+          tone_of_voice: data.tone_of_voice,
+        },
+        {
+          language: data.language,
+          num_copies: data.num_copies,
+        }
+      );
+    if (resp.data[0].text.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
 
-        return resp;
-    }catch(err){
-        throw createError(401,err);
-    }
-    
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+};
 
-}
+exports.callTikTokScripter = async function (userId, data) {
+  sdk.auth(process.env.WRITESONIC_API_KEY);
 
-exports.callTikTokScripter =async  function(userId,data) {
+  let engine = await checkIfNrWord(userId);
 
-    sdk.auth(process.env.WRITESONIC_API_KEY);
-    
-    let engine = await checkIfNrWord(userId)
+  if (!engine) throw createError(401, "engine Failed");
 
-    if(!engine)
-        throw createError(401,'engine Failed');
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
+  try {
+    const resp = await sdk.tiktokScripts_V2BusinessContentTiktokScripts_post(
+      {
+        description: data.description,
+      },
+      {
+        language: data.language,
+        num_copies: data.num_copies,
+      }
+    );
 
-    if(!data){
-        throw createError(401,'Failed to generate the text');
-    }
-    try{
+    if (resp.data[0].text.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
 
-        const resp = await sdk.tiktokScripts_V2BusinessContentTiktokScripts_post({
-            description: data.description,
-          },{
-            language:data.language,
-            num_copies: data.num_copies
-          })
-        
-        if(resp.data[0].text.length > 0)
-        await updateNbrWords({userId,nbr_words:resp.data[0].text.length})
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+};
 
-        return resp;
-    }catch(err){
-        throw createError(401,err);
-    }
-    
+exports.callYoutubeIntrosApi = async function (userId, data) {
+  let engine = await checkIfNrWord(userId);
+  console.log(data);
 
-}
+  if (!engine) throw createError(401, "engine Failed");
 
-exports.callYoutubeIntrosApi =async  function(userId,data) {
+  sdk.auth(process.env.WRITESONIC_API_KEY);
 
-    let engine = await checkIfNrWord(userId)
-    console.log(data);
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
 
-    if(!engine)
-        throw createError(401,'engine Failed');
+  try {
+    const resp = await sdk.youtubeIntros_V2BusinessContentYoutubeIntros_post(
+      {
+        video_title: data.video_title,
+        search_term: data.search_term,
+        tone_of_voice: data.tone_of_voice,
+      },
+      {
+        language: data.language,
+        num_copies: data.num_copies,
+      }
+    );
 
-    sdk.auth(process.env.WRITESONIC_API_KEY);
-    
-    if(!data){
-        throw createError(401,'Failed to generate the text');
-    }
+    if (resp.data[0].text.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
 
-    try{
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+};
 
-        const resp = await sdk.youtubeIntros_V2BusinessContentYoutubeIntros_post({
-            video_title: data.video_title,
-            search_term: data.search_term,
-            tone_of_voice: data.tone_of_voice
-          },{
-            language:data.language,
-            num_copies: data.num_copies
-          })
+exports.callYoutubeHooksApi = async function (userId, data) {
+  sdk.auth(process.env.WRITESONIC_API_KEY);
 
-        if(resp.data[0].text.length > 0)
-        await updateNbrWords({userId,nbr_words:resp.data[0].text.length})
+  let engine = await checkIfNrWord(userId);
 
-        return resp;
-    }catch(err){
-        throw createError(401,err);
-    }
-}
+  if (!engine) throw createError(401, "engine Failed");
 
-exports.callYoutubeHooksApi =async  function(userId,data) {
-    sdk.auth(process.env.WRITESONIC_API_KEY);
-    
-    let engine = await checkIfNrWord(userId)
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
+  try {
+    const resp = await sdk.youtubeHooks_V2BusinessContentYoutubeHooks_post(
+      {
+        video_title: data.video_title,
+        tone: data.tone_of_voice,
+      },
+      {
+        language: data.language,
+        num_copies: data.num_copies,
+      }
+    );
+    if (resp.data[0].text.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
 
-    if(!engine)
-        throw createError(401,'engine Failed');
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+};
 
-    if(!data){
-        throw createError(401,'Failed to generate the text');
-    }
-    try{
+exports.callYoutubeDescriptionsApi = async function (userId, data) {
+  sdk.auth(process.env.WRITESONIC_API_KEY);
 
-        const resp = await sdk.youtubeHooks_V2BusinessContentYoutubeHooks_post({
-            video_title: data.video_title,
-            tone: data.tone_of_voice
-          },{
-            language:data.language,
-            num_copies: data.num_copies
-          })
-          if(resp.data[0].text.length > 0)  
-        await updateNbrWords({userId,nbr_words:resp.data[0].text.length})
+  let engine = await checkIfNrWord(userId);
 
-        return resp;
-    }catch(err){
-        throw createError(401,err);
-    }
-}
+  if (!engine) throw createError(401, "engine Failed");
 
-exports.callYoutubeDescriptionsApi =async  function(userId,data) {
-    sdk.auth(process.env.WRITESONIC_API_KEY);
-    
-    let engine = await checkIfNrWord(userId)
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
+  try {
+    const resp =
+      await sdk.youtubeDescriptionsV2_V2BusinessContentYoutubeDescriptionsV2_post(
+        {
+          video_title: data.video_title,
+          keywords: data.search_term,
+        },
+        {
+          language: data.language,
+          num_copies: data.num_copies,
+        }
+      );
+    if (resp.data[0].text.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
 
-    if(!engine)
-        throw createError(401,'engine Failed');
-
-    if(!data){
-        throw createError(401,'Failed to generate the text');
-    }
-    try{
-
-        const resp = await sdk.youtubeDescriptionsV2_V2BusinessContentYoutubeDescriptionsV2_post({
-            video_title: data.video_title,
-            keywords: data.search_term
-          },{
-            language:data.language,
-            num_copies: data.num_copies
-          })
-          if(resp.data[0].text.length > 0)
-        await updateNbrWords({userId,nbr_words:resp.data[0].text.length})
-
-        return resp;
-    }catch(err){
-        throw createError(401,err);
-    }
-
-}
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+};
