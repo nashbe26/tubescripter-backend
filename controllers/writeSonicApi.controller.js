@@ -36,7 +36,17 @@ const callTikTokScripterApi = async (req, res) => {
     res.status(200).json(response);
 }
 
-
+const callWriteSonicChat = async (req, res) => {
+    let userId= req.user
+    let response = await writerSonicService.callWriteSonicChat(userId,req.body)
+    res.status(200).json(response);
+}
+ 
+const callWriteArticleWriter = async (req, res) => {
+    let userId= req.user
+    let response = await writerSonicService.callWriteArticleWriter(userId,req.body)
+    res.status(200).json(response);
+}
 module.exports = {
     callYoutubeTitleApi,
     callParagraphWriterApi,
@@ -44,4 +54,6 @@ module.exports = {
     callTikTokScripterApi,
     callYoutubeHooksApi,
     callYoutubeDescriptionsApi,
+    callWriteSonicChat,
+    callWriteArticleWriter
 }

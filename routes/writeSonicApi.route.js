@@ -50,4 +50,13 @@ router.post('/youtubedescriptions', writesonicController.callYoutubeDescriptions
 
 router.post('/tiktokscriptdescription', writesonicController.callTikTokScripterApi);
 
+router.post('/chatsonic', writesonicController.callWriteSonicChat);
+
+
+router.post('/articlewriterdescription', writesonicController.callWriteArticleWriter);
+router.post('/youtubevideooutline', writesonicController.callWriteArticleWriter);
+router.post('/articleparagraphoutline', writesonicController.callWriteArticleWriter);
+
+
+
 module.exports = router

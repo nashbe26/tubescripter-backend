@@ -104,7 +104,7 @@ const getUserById = async (id) => {
     __v: 0,
     createdAt: 0,
     updatedAt: 0,
-  });
+  }).populate('drafts.drafts_id');
 
   if (!oneUser) throw createError(401, "User not Available");
 

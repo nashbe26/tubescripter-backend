@@ -13,6 +13,12 @@ const Users = new mongoose.Schema(
     plan: { type: String, default: "free" },
     subscribe_id: { type: String },
     nbr_words: { type: Number, default: 0 },
+    drafts: [{
+        drafts_id:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Drafts',
+        },
+      }]
   },
   {
     timestamps: true,

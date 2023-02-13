@@ -13,7 +13,7 @@ async function checkIfNrWord(userId) {
   if (user.plan == "starter" && user.nbr_words > 8000)
     throw createError(401, "You have reached you limit as starter user!");
 
-  if (user.plan == "premuim" && user.nbr_words > 20000)
+  if (user.plan == "premium" && user.nbr_words > 20000)
     throw createError(401, "You have reached you limit as premium user!");
 
   if (user.plan == "custom" && user.nbr_words > 100000)
@@ -23,16 +23,16 @@ async function checkIfNrWord(userId) {
 
   switch (user.plan) {
     case "free":
-      engine = "economy";
+      engine = "good";
       break;
     case "starter":
       engine = "good";
       break;
-    case "premuim":
-      engine = "premuim";
+    case "premium":
+      engine = "premium";
       break;
     case "custom":
-      engine = "custom";
+      engine = "premium";
       break;
     default:
       break;
@@ -61,11 +61,12 @@ exports.callYoutubeTitleApi = async function (userId, data) {
       {
         language: data.language,
         num_copies: data.num_copies,
-        engine,
+        engine
+        
       }
     );
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
     return resp;
   } catch (err) {
     throw createError(401, err);
@@ -82,9 +83,11 @@ exports.callParagraphWriterApi = async function (userId, data) {
   if (!data) {
     throw createError(401, "Failed to generate the text");
   }
-
+  
+  let str = "";
   try {
-    const resp =
+    if(data.timeline == 1){
+      const resp =
       await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
         {
           paragraph_title: data.video_title,
@@ -93,12 +96,51 @@ exports.callParagraphWriterApi = async function (userId, data) {
         {
           language: data.language,
           num_copies: data.num_copies,
+          engine
         }
       );
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
 
-    return resp;
+    str = str +resp.data[0].text;
+
+    }else{
+      let newOutline = await youtubeOutline(userId,data)
+      const resp =
+      await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
+        {
+          paragraph_title: data.video_title,
+          tone_of_voice: data.tone_of_voice,
+        },
+        {
+          language: data.language,
+          num_copies: data.num_copies,
+          engine
+        }
+      );
+      str = str +resp.data[0].text+'\n';
+
+      let outline = newOutline.data[0].text.split('\n')
+      
+      for (let i=0;i<parseInt(data.timeline)-1;i++){
+        console.log(outline);
+        const resp =
+        await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
+          {
+            paragraph_title: outline[i].slice(3),
+            tone_of_voice: data.tone_of_voice,
+          },
+          {
+            language: data.language,
+            num_copies: data.num_copies,
+            engine
+          }
+        );
+      }
+      str = str +resp.data[0].text +"\n";
+    }    
+    console.log(str.split(' ').length);
+    return str;
   } catch (err) {
     throw createError(401, err);
   }
@@ -122,11 +164,12 @@ exports.callTikTokScripter = async function (userId, data) {
       {
         language: data.language,
         num_copies: data.num_copies,
+        engine
       }
     );
 
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
 
     return resp;
   } catch (err) {
@@ -134,10 +177,9 @@ exports.callTikTokScripter = async function (userId, data) {
   }
 };
 
-exports.callYoutubeIntrosApi = async function (userId, data) {
+const callYoutubeIntrosApi = async function (userId, data) {
   let engine = await checkIfNrWord(userId);
-  console.log(data);
-
+  
   if (!engine) throw createError(401, "engine Failed");
 
   sdk.auth(process.env.WRITESONIC_API_KEY);
@@ -156,11 +198,12 @@ exports.callYoutubeIntrosApi = async function (userId, data) {
       {
         language: data.language,
         num_copies: data.num_copies,
+        engine
       }
     );
 
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
 
     return resp;
   } catch (err) {
@@ -187,10 +230,11 @@ exports.callYoutubeHooksApi = async function (userId, data) {
       {
         language: data.language,
         num_copies: data.num_copies,
+        engine
       }
     );
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
 
     return resp;
   } catch (err) {
@@ -218,13 +262,137 @@ exports.callYoutubeDescriptionsApi = async function (userId, data) {
         {
           language: data.language,
           num_copies: data.num_copies,
+          engine
         }
       );
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.length });
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
 
     return resp;
   } catch (err) {
     throw createError(401, err);
   }
 };
+
+exports.callWriteArticleWriter = async function (userId, data) {
+
+  sdk.auth(process.env.WRITESONIC_API_KEY);
+  
+  const intro = await callYoutubeIntrosApi(userId,data)
+  
+  console.log(intro.data[0].text);
+  let newOutline = await youtubeOutline(userId,data)
+  
+  let outline = newOutline.data[0].text.split(+'\n')
+
+  let sections = []
+
+  for(let i=0;i<parseInt(data.timeline);i++){
+    sections.push(outline[i].slice(3))
+  }
+
+
+  let engine = await checkIfNrWord(userId);
+
+  if (!engine) throw createError(401, "engine Failed");
+
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
+
+  console.log({
+    article_sections: sections,
+    article_title: data.video_title,
+    article_intro: intro.data[0].text
+  });
+
+  try {
+    const resp =
+      await sdk.aiArticleWriterV3_V2BusinessContentAiArticleWriterV3_post({
+          article_sections: sections,
+          article_title: data.video_title,
+          article_intro: intro.data[0].text
+        },
+        {
+          language: data.language,
+          num_copies: data.num_copies,
+          engine
+        });
+    if (resp.data.data[0].content.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data.data[0].content.split(' ').length });
+
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+
+}
+
+const youtubeOutline = async function (userId, data) {
+
+  sdk.auth(process.env.WRITESONIC_API_KEY);
+
+  let engine = await checkIfNrWord(userId);
+
+  if (!engine) throw createError(401, "engine Failed");
+
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
+  try {
+    const resp =
+      await sdk.youtubeOutlines_V2BusinessContentYoutubeOutlines_post(
+        {
+          video_title: data.video_title,
+          search_term: data.search_term,
+          tone_of_voice: data.tone_of_voice,
+        },
+        {
+          language: data.language,
+          num_copies: data.num_copies,
+          engine
+        }
+      );
+    if (resp.data[0].text.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+
+}
+
+exports.callWriteSonicChat = async function (userId, data) {
+  sdk.auth(process.env.WRITESONIC_API_KEY);
+
+  let engine = await checkIfNrWord(userId);
+
+  if (!engine) throw createError(401, "engine Failed");
+
+  if (!data) {
+    throw createError(401, "Failed to generate the text");
+  }
+  try {
+    const resp =
+      await sdk.chatsonic_V2BusinessContentChatsonic_post(
+        {
+          enable_google_results: 'true',
+          enable_memory: false,
+          input_text: data.text
+        },
+        {
+          engine
+        }
+      );
+    if (resp.data[0].text.length > 0)
+      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+
+    return resp;
+  } catch (err) {
+    throw createError(401, err);
+  }
+};
+
+/*module.exports = {
+  callYoutubeIntrosApi
+}*/
