@@ -280,10 +280,9 @@ exports.callWriteArticleWriter = async function (userId, data) {
   
   const intro = await callYoutubeIntrosApi(userId,data)
   
-  console.log(intro.data[0].text);
   let newOutline = await youtubeOutline(userId,data)
   
-  let outline = newOutline.data[0].text.split(+'\n')
+  let outline = newOutline.data[0].text.split('\n')
 
   let sections = []
 
