@@ -13,7 +13,7 @@ async function checkIfNrWord(userId) {
   if (user.plan == "starter" && user.nbr_words > 8000)
     throw createError(401, "You have reached you limit as starter user!");
 
-  if (user.plan == "premuim" && user.nbr_words > 20000)
+  if (user.plan == "premium" && user.nbr_words > 20000)
     throw createError(401, "You have reached you limit as premium user!");
 
   if (user.plan == "custom" && user.nbr_words > 100000)
@@ -28,8 +28,8 @@ async function checkIfNrWord(userId) {
     case "starter":
       engine = "good";
       break;
-    case "premuim":
-      engine = "premuim";
+    case "premium":
+      engine = "premium";
       break;
     case "custom":
       engine = "custom";
