@@ -34,8 +34,8 @@ const updateDraft = asyncHandler(async (req, res) => {
 
 const deleteDraft = asyncHandler(async (req, res) => {
   let userId = req.user;
-
-  let draft = await draftService.deleteDraft(userId, req.body);
+  const { _id } = req.params;
+  let draft = await draftService.deleteDraft(userId, _id);
 
   res.status(200).json(draft);
 });

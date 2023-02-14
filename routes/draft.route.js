@@ -7,6 +7,6 @@ router.get("/getmydrafts", draftController.getmydrafts);
 router.get("/getonedraft/:_id", draftController.getonedraft);
 router.post("/createDraft", draftController.createDraft);
 router.put("/updateDraft", draftController.updateDraft);
-router.delete("/deleteDraft", draftController.deleteDraft);
+router.delete("/deleteDraft/:_id", draftController.deleteDraft);
 
 module.exports = router;

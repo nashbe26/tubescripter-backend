@@ -70,14 +70,14 @@ const updateDraft = async (userId, data) => {
   return updated;
 };
 
-const deleteDraft = async (data) => {
-  if (!data.user_id) throw createError(401, "User id is not defiend");
+const deleteDraft = async (userId, _id) => {
+  if (!userId) throw createError(401, "User id is not defiend");
+  console.log(_id);
+  const deleted = await Draft.findOneAndDelete({ _id });
 
-  const updated = await Draft.findOneAndDelete({ _id: data.id });
+  if (!deleted) throw createError(401, "Failed to update the website");
 
-  if (!updated) throw createError(401, "Failed to update the website");
-
-  return updated;
+  return deleted;
 };
 
 module.exports = {
