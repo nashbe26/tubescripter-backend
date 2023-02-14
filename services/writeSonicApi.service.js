@@ -61,12 +61,14 @@ exports.callYoutubeTitleApi = async function (userId, data) {
       {
         language: data.language,
         num_copies: data.num_copies,
-        engine
-        
+        engine,
       }
     );
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+      await updateNbrWords({
+        userId,
+        nbr_words: resp.data[0].text.split(" ").length,
+      });
     return resp;
   } catch (err) {
     throw createError(401, err);
@@ -83,63 +85,65 @@ exports.callParagraphWriterApi = async function (userId, data) {
   if (!data) {
     throw createError(401, "Failed to generate the text");
   }
-  
+
   let str = "";
   try {
-    if(data.timeline == 1){
+    if (data.timeline == 1) {
       const resp =
-      await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
-        {
-          paragraph_title: data.video_title,
-          tone_of_voice: data.tone_of_voice,
-        },
-        {
-          language: data.language,
-          num_copies: data.num_copies,
-          engine
-        }
-      );
-    if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
-
-    str = str +resp.data[0].text;
-
-    }else{
-      let newOutline = await youtubeOutline(userId,data)
-      const resp =
-      await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
-        {
-          paragraph_title: data.video_title,
-          tone_of_voice: data.tone_of_voice,
-        },
-        {
-          language: data.language,
-          num_copies: data.num_copies,
-          engine
-        }
-      );
-      str = str +resp.data[0].text+'\n';
-
-      let outline = newOutline.data[0].text.split('\n')
-      
-      for (let i=0;i<parseInt(data.timeline)-1;i++){
-        console.log(outline);
-        const resp =
         await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
           {
-            paragraph_title: outline[i].slice(3),
+            paragraph_title: data.video_title,
             tone_of_voice: data.tone_of_voice,
           },
           {
             language: data.language,
             num_copies: data.num_copies,
-            engine
+            engine,
           }
         );
+      if (resp.data[0].text.length > 0)
+        await updateNbrWords({
+          userId,
+          nbr_words: resp.data[0].text.split(" ").length,
+        });
+
+      str = str + resp.data[0].text;
+    } else {
+      let newOutline = await youtubeOutline(userId, data);
+      const resp =
+        await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
+          {
+            paragraph_title: data.video_title,
+            tone_of_voice: data.tone_of_voice,
+          },
+          {
+            language: data.language,
+            num_copies: data.num_copies,
+            engine,
+          }
+        );
+      str = str + resp.data[0].text + "\n";
+
+      let outline = newOutline.data[0].text.split("\n");
+
+      for (let i = 0; i < parseInt(data.timeline) - 1; i++) {
+        console.log(outline);
+        const resp =
+          await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
+            {
+              paragraph_title: outline[i].slice(3),
+              tone_of_voice: data.tone_of_voice,
+            },
+            {
+              language: data.language,
+              num_copies: data.num_copies,
+              engine,
+            }
+          );
       }
-      str = str +resp.data[0].text +"\n";
-    }    
-    console.log(str.split(' ').length);
+      str = str + resp.data[0].text + "\n";
+    }
+    console.log(str.split(" ").length);
     return str;
   } catch (err) {
     throw createError(401, err);
@@ -164,12 +168,15 @@ exports.callTikTokScripter = async function (userId, data) {
       {
         language: data.language,
         num_copies: data.num_copies,
-        engine
+        engine,
       }
     );
 
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+      await updateNbrWords({
+        userId,
+        nbr_words: resp.data[0].text.split(" ").length,
+      });
 
     return resp;
   } catch (err) {
@@ -179,7 +186,7 @@ exports.callTikTokScripter = async function (userId, data) {
 
 const callYoutubeIntrosApi = async function (userId, data) {
   let engine = await checkIfNrWord(userId);
-  
+
   if (!engine) throw createError(401, "engine Failed");
 
   sdk.auth(process.env.WRITESONIC_API_KEY);
@@ -198,12 +205,15 @@ const callYoutubeIntrosApi = async function (userId, data) {
       {
         language: data.language,
         num_copies: data.num_copies,
-        engine
+        engine,
       }
     );
 
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+      await updateNbrWords({
+        userId,
+        nbr_words: resp.data[0].text.split(" ").length,
+      });
 
     return resp;
   } catch (err) {
@@ -230,11 +240,14 @@ exports.callYoutubeHooksApi = async function (userId, data) {
       {
         language: data.language,
         num_copies: data.num_copies,
-        engine
+        engine,
       }
     );
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+      await updateNbrWords({
+        userId,
+        nbr_words: resp.data[0].text.split(" ").length,
+      });
 
     return resp;
   } catch (err) {
@@ -262,11 +275,14 @@ exports.callYoutubeDescriptionsApi = async function (userId, data) {
         {
           language: data.language,
           num_copies: data.num_copies,
-          engine
+          engine,
         }
       );
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+      await updateNbrWords({
+        userId,
+        nbr_words: resp.data[0].text.split(" ").length,
+      });
 
     return resp;
   } catch (err) {
@@ -275,21 +291,20 @@ exports.callYoutubeDescriptionsApi = async function (userId, data) {
 };
 
 exports.callWriteArticleWriter = async function (userId, data) {
-
   sdk.auth(process.env.WRITESONIC_API_KEY);
-  
-  const intro = await callYoutubeIntrosApi(userId,data)
-  
-  let newOutline = await youtubeOutline(userId,data)
-  
-  let outline = newOutline.data[0].text.split('\n')
 
-  let sections = []
+  const intro = await callYoutubeIntrosApi(userId, data);
 
-  for(let i=0;i<parseInt(data.timeline);i++){
-    sections.push(outline[i].slice(3))
+  let newOutline = await youtubeOutline(userId, data);
+
+  let outline = newOutline.data[0].text.split("\n");
+  console.log(outline);
+
+  let sections = [];
+
+  for (let i = 0; i < parseInt(data.timeline); i++) {
+    sections.push(outline[i].slice(3));
   }
-
 
   let engine = await checkIfNrWord(userId);
 
@@ -302,33 +317,36 @@ exports.callWriteArticleWriter = async function (userId, data) {
   console.log({
     article_sections: sections,
     article_title: data.video_title,
-    article_intro: intro.data[0].text
+    article_intro: intro.data[0].text,
   });
 
   try {
     const resp =
-      await sdk.aiArticleWriterV3_V2BusinessContentAiArticleWriterV3_post({
+      await sdk.aiArticleWriterV3_V2BusinessContentAiArticleWriterV3_post(
+        {
           article_sections: sections,
           article_title: data.video_title,
-          article_intro: intro.data[0].text
+          article_intro: intro.data[0].text,
         },
         {
           language: data.language,
           num_copies: data.num_copies,
-          engine
-        });
+          engine,
+        }
+      );
     if (resp.data.data[0].content.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data.data[0].content.split(' ').length });
+      await updateNbrWords({
+        userId,
+        nbr_words: resp.data.data[0].content.split(" ").length,
+      });
 
     return resp;
   } catch (err) {
     throw createError(401, err);
   }
-
-}
+};
 
 const youtubeOutline = async function (userId, data) {
-
   sdk.auth(process.env.WRITESONIC_API_KEY);
 
   let engine = await checkIfNrWord(userId);
@@ -349,17 +367,19 @@ const youtubeOutline = async function (userId, data) {
         {
           language: data.language,
           num_copies: data.num_copies,
-          engine
+          engine,
         }
       );
     if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+      await updateNbrWords({
+        userId,
+        nbr_words: resp.data[0].text.split(" ").length,
+      });
     return resp;
   } catch (err) {
     throw createError(401, err);
   }
-
-}
+};
 
 exports.callWriteSonicChat = async function (userId, data) {
   sdk.auth(process.env.WRITESONIC_API_KEY);
@@ -372,19 +392,22 @@ exports.callWriteSonicChat = async function (userId, data) {
     throw createError(401, "Failed to generate the text");
   }
   try {
-    const resp =
-      await sdk.chatsonic_V2BusinessContentChatsonic_post(
-        {
-          enable_google_results: 'true',
-          enable_memory: false,
-          input_text: data.text
-        },
-        {
-          engine
-        }
-      );
-    if (resp.data[0].text.length > 0)
-      await updateNbrWords({ userId, nbr_words: resp.data[0].text.split(' ').length });
+    const resp = await sdk.chatsonic_V2BusinessContentChatsonic_post(
+      {
+        enable_google_results: "true",
+        enable_memory: false,
+        input_text: data.text,
+      },
+      {
+        engine,
+      }
+    );
+    console.log(resp.data.message);
+    if (resp.data.message.length > 0)
+      await updateNbrWords({
+        userId,
+        nbr_words: resp.data.message.split(" ").length,
+      });
 
     return resp;
   } catch (err) {
