@@ -41,7 +41,7 @@ async function checkIfNrWord(userId) {
   return engine;
 }
 
-exports.callYoutubeTitleApi = async function (userId, data) {
+const callYoutubeTitleApi = async function (userId, data) {
   sdk.auth(process.env.WRITESONIC_API_KEY);
 
   let engine = await checkIfNrWord(userId);
@@ -75,7 +75,7 @@ exports.callYoutubeTitleApi = async function (userId, data) {
   }
 };
 
-exports.callParagraphWriterApi = async function (userId, data) {
+const callParagraphWriterApi = async function (userId, data) {
   sdk.auth(process.env.WRITESONIC_API_KEY);
 
   let engine = await checkIfNrWord(userId);
@@ -150,7 +150,7 @@ exports.callParagraphWriterApi = async function (userId, data) {
   }
 };
 
-exports.callTikTokScripter = async function (userId, data) {
+const callTikTokScripter = async function (userId, data) {
   sdk.auth(process.env.WRITESONIC_API_KEY);
 
   let engine = await checkIfNrWord(userId);
@@ -160,25 +160,73 @@ exports.callTikTokScripter = async function (userId, data) {
   if (!data) {
     throw createError(401, "Failed to generate the text");
   }
-  try {
-    const resp = await sdk.tiktokScripts_V2BusinessContentTiktokScripts_post(
-      {
-        description: data.description,
-      },
-      {
-        language: data.language,
-        num_copies: data.num_copies,
-        engine,
-      }
-    );
 
-    if (resp.data[0].text.length > 0)
+
+  const resp = await sdk.tiktokScripts_V2BusinessContentTiktokScripts_post({
+    description: data.description,
+  },
+  {
+    language: data.language,
+    num_copies: data.num_copies,
+    engine,
+  }
+  );
+  let str= ""
+
+  try {
+    if(data.timeline=="t-1"){
+
+  
+      if (resp.data[0].text.length > 0)
+        await updateNbrWords({
+          userId,
+          nbr_words: resp.data[0].text.split(" ").length,
+        });
+        str=resp.data[0].text;
+  
+    }else if(data.timeline=="t-2"){
+      const description = await callYoutubeDescriptionsApi(userId,data)
+      str = str + description.data[0].text+ '\n' + resp.data[0].text;
+      if (str.length > 0)
       await updateNbrWords({
         userId,
-        nbr_words: resp.data[0].text.split(" ").length,
+        nbr_words: str.split(" ").length,
       });
 
-    return resp;
+    }else if(data.timeline=="t-3"){
+      console.log(data.description);
+      const resp =
+      await sdk.tiktokHooks_V2BusinessContentTiktokHooks_post(
+        {
+          description: data.description
+        },
+        {
+          language: data.language,
+          num_copies: data.num_copies,
+          engine,
+        }
+      );
+      const resp_int =
+      await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
+        {
+          paragraph_title: data.video_title,
+          tone_of_voice: data.tone_of_voice,
+        },
+        {
+          language: data.language,
+          num_copies: data.num_copies,
+          engine,
+        }
+      );
+      str = str + resp.data[0].text + "\n" +resp_int.data[0].text;
+      if (str.length > 0)
+      await updateNbrWords({
+        userId,
+        nbr_words: str.split(" ").length,
+      });
+      log
+    }
+    return str;
   } catch (err) {
     throw createError(401, err);
   }
@@ -221,7 +269,7 @@ const callYoutubeIntrosApi = async function (userId, data) {
   }
 };
 
-exports.callYoutubeHooksApi = async function (userId, data) {
+const callYoutubeHooksApi = async function (userId, data) {
   sdk.auth(process.env.WRITESONIC_API_KEY);
 
   let engine = await checkIfNrWord(userId);
@@ -255,7 +303,7 @@ exports.callYoutubeHooksApi = async function (userId, data) {
   }
 };
 
-exports.callYoutubeDescriptionsApi = async function (userId, data) {
+const callYoutubeDescriptionsApi = async function (userId, data) {
   sdk.auth(process.env.WRITESONIC_API_KEY);
 
   let engine = await checkIfNrWord(userId);
@@ -290,7 +338,7 @@ exports.callYoutubeDescriptionsApi = async function (userId, data) {
   }
 };
 
-exports.callWriteArticleWriter = async function (userId, data) {
+const callWriteArticleWriter = async function (userId, data) {
   sdk.auth(process.env.WRITESONIC_API_KEY);
 
   const intro = await callYoutubeIntrosApi(userId, data);
@@ -381,7 +429,7 @@ const youtubeOutline = async function (userId, data) {
   }
 };
 
-exports.callWriteSonicChat = async function (userId, data) {
+const callWriteSonicChat = async function (userId, data) {
   sdk.auth(process.env.WRITESONIC_API_KEY);
 
   let engine = await checkIfNrWord(userId);
@@ -415,6 +463,14 @@ exports.callWriteSonicChat = async function (userId, data) {
   }
 };
 
-/*module.exports = {
-  callYoutubeIntrosApi
-}*/
+module.exports = {
+  callYoutubeIntrosApi,
+  callYoutubeTitleApi,
+  callTikTokScripter,
+  callYoutubeHooksApi,
+  callYoutubeDescriptionsApi,
+  callWriteArticleWriter,
+  callWriteSonicChat,
+  callParagraphWriterApi,
+  youtubeOutline
+}

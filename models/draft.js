@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 
 const drafts = new mongoose.Schema({
     draft_title:{
-        type:String
+        type:String,
+        default:"document"
     },
     draft: { 
         title:{ type: String},
@@ -10,6 +11,9 @@ const drafts = new mongoose.Schema({
         description:{ type: String},
         hooks:{ type: String},
         intro:{ type: String}
+    },
+    type:{
+        type:String,
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
