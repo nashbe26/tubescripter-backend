@@ -10,7 +10,7 @@ const drafts = new mongoose.Schema({
         content:{ type: String},
         description:{ type: String},
         hooks:{ type: String},
-        intro:{ type: String}
+        intro:{ type: String},
     },
     type:{
         type:String,

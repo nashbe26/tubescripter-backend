@@ -25,6 +25,7 @@ const getallbyuser = async (userId) => {
 };
 
 const createDraft = async (userId, data) => {
+    console.log(data);
   if (!userId) throw createError(401, "User id is not defiend");
 
   let convertedId = mongoose.Types.ObjectId(userId);
@@ -33,6 +34,7 @@ const createDraft = async (userId, data) => {
     draft: data.draft,
     userId: convertedId,
     draft_title: data.draft_title,
+    type:data.type
   };
   const draft = await Draft.create(obj);
 

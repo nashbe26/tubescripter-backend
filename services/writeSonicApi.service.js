@@ -351,7 +351,7 @@ const callWriteArticleWriter = async function (userId, data) {
   let sections = [];
 
   for (let i = 0; i < parseInt(data.timeline); i++) {
-    sections.push(outline[i].slice(3));
+    sections.push(outline[i]);
   }
 
   let engine = await checkIfNrWord(userId);
@@ -406,9 +406,9 @@ const youtubeOutline = async function (userId, data) {
   }
   try {
     const resp =
-      await sdk.youtubeOutlines_V2BusinessContentYoutubeOutlines_post(
+      await sdk.youtubeIdeas_V2BusinessContentYoutubeIdeas_post(
         {
-          video_title: data.video_title,
+          video_topic: data.video_title,
           search_term: data.search_term,
           tone_of_voice: data.tone_of_voice,
         },
@@ -447,7 +447,7 @@ const callWriteSonicChat = async function (userId, data) {
         input_text: data.text,
       },
       {
-        engine,
+        engine:"premium",
       }
     );
     console.log(resp.data.message);
