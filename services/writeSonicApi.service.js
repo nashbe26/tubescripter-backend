@@ -7,7 +7,7 @@ const sdk = require("api")("@writesonic/v2.2#43xnsflcadmm1b");
 async function checkIfNrWord(userId) {
   const user = await getUserById(userId);
 
-  if (user.plan == "free" && user.nbr_words > 25000)
+  if (user.plan == "free" && user.nbr_words > 250000)
     throw createError(401, "You have reached you limit as free user!");
 
   if (user.plan == "starter" && user.nbr_words > 8000)
@@ -85,6 +85,7 @@ const callParagraphWriterApi = async function (userId, data) {
   if (!data) {
     throw createError(401, "Failed to generate the text");
   }
+  console.log(data.timeline);
 
   let str = "";
   try {
@@ -126,7 +127,7 @@ const callParagraphWriterApi = async function (userId, data) {
 
       let outline = newOutline.data[0].text.split("\n");
 
-      for (let i = 0; i < parseInt(data.timeline) - 1; i++) {
+      for (let i = 0; i < parseInt(data.timeline) ; i++) {
         console.log(outline);
         const resp =
           await sdk.paragraphWriter_V2BusinessContentParagraphWriter_post(
@@ -140,10 +141,9 @@ const callParagraphWriterApi = async function (userId, data) {
               engine,
             }
           );
+          str = str + resp.data[0].text + "\n";
       }
-      str = str + resp.data[0].text + "\n";
     }
-    console.log(str.split(" ").length);
     return str;
   } catch (err) {
     throw createError(401, err);
@@ -346,12 +346,13 @@ const callWriteArticleWriter = async function (userId, data) {
   let newOutline = await youtubeOutline(userId, data);
 
   let outline = newOutline.data[0].text.split("\n");
-  console.log(outline);
 
   let sections = [];
 
+  console.log(data.timeline);
+
   for (let i = 0; i < parseInt(data.timeline); i++) {
-    sections.push(outline[i]);
+    sections.push(outline[i].replace('- ',''));
   }
 
   let engine = await checkIfNrWord(userId);
@@ -362,17 +363,14 @@ const callWriteArticleWriter = async function (userId, data) {
     throw createError(401, "Failed to generate the text");
   }
 
-  console.log({
-    article_sections: sections,
-    article_title: data.video_title,
-    article_intro: intro.data[0].text,
-  });
+  let str = "";
 
   try {
-    const resp =
-      await sdk.aiArticleWriterV3_V2BusinessContentAiArticleWriterV3_post(
-        {
-          article_sections: sections,
+
+    for(let i=0;i<sections.length;i++){
+      
+      const resp = await sdk.aiArticleWriterV3_V2BusinessContentAiArticleWriterV3_post({
+          article_sections:[sections[i]],
           article_title: data.video_title,
           article_intro: intro.data[0].text,
         },
@@ -380,15 +378,17 @@ const callWriteArticleWriter = async function (userId, data) {
           language: data.language,
           num_copies: data.num_copies,
           engine,
-        }
-      );
-    if (resp.data.data[0].content.length > 0)
+        });
+      str = str + resp.data.data[0].content + '\n';
+    }
+   
+    if (str.length > 0)
       await updateNbrWords({
         userId,
-        nbr_words: resp.data.data[0].content.split(" ").length,
+        nbr_words: str.split(" ").length,
       });
 
-    return resp;
+    return str;
   } catch (err) {
     throw createError(401, err);
   }
